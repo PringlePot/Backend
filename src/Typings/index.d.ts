@@ -8,9 +8,8 @@ declare global {
       PORT: string;
       HOST: string;
       S3_INFO: string;
-      API_KEY: string;
-      MAIL_INFO: string;
       S3_BUCKET: string;
+      MAIL_INFO: string;
       SESSION_KEY: string;
       FRONTEND_URL: string;
       DATABASE_URL: string;
