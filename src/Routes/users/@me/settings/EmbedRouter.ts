@@ -86,11 +86,7 @@ export default async function EmbedRouter(fastify: FastifyInstance) {
         },
       },
       async (request, reply) => {
-      // const {user} = request;
-        const user = await prisma.user.findFirst({
-          where: {uid: 1},
-          include: {embeds: true},
-        });
+        const {user} = request;
         const {id} = request.params;
 
         if (!user) {
@@ -122,11 +118,7 @@ export default async function EmbedRouter(fastify: FastifyInstance) {
   fastify.delete<{ Params: EditEmbedParams }>(
       '/:id',
       async (request, reply) => {
-      // const {user} = request;
-        const user = await prisma.user.findFirst({
-          where: {uid: 1},
-          include: {embeds: true},
-        });
+        const {user} = request;
         const {id} = request.params;
 
         if (!user) {
