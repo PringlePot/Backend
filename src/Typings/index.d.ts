@@ -1,6 +1,15 @@
+import type { RedisClientType } from "redis";
 import type { ValidationResult } from "joi";
-import { File } from "fastify-multer/lib/interfaces";
-import { PrismaClient, User, Invite, Discord, UploadSettings, UserEmbed, Testimonial } from "@prisma/client";
+import type { File } from "fastify-multer/lib/interfaces";
+import type {
+  PrismaClient,
+  User,
+  Invite,
+  Discord,
+  UploadSettings,
+  UserEmbed,
+  Testimonial,
+} from "@prisma/client";
 
 declare global {
   namespace NodeJS {
@@ -9,6 +18,7 @@ declare global {
       HOST: string;
       S3_INFO: string;
       S3_BUCKET: string;
+      REDIS_URL: string;
       MAIL_INFO: string;
       SESSION_KEY: string;
       FRONTEND_URL: string;
@@ -35,6 +45,7 @@ declare global {
 declare module "fastify" {
   interface FastifyInstance {
     prisma: PrismaClient;
+    redis: RedisClientType<any>;
   }
 
   interface PassportUser extends User {

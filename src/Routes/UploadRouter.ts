@@ -1,9 +1,9 @@
 import fastifyMulter from 'fastify-multer';
 import type {FastifyInstance} from 'fastify';
-import {uploadFile} from '../Utility/Storage';
 import {formatEmbed} from '../Utility/Embeds';
 import {File} from 'fastify-multer/lib/interfaces';
 import {generateRandomString} from '../Utility/Misc';
+import {s3Info, uploadFile} from '../Utility/Storage';
 import {verifyUser, verifyFile} from '../Middlewares/UploadMiddlewares';
 
 const multer = fastifyMulter({
@@ -19,7 +19,7 @@ interface verifiedFile extends File {
 }
 
 export default async function UploadRouter(fastify: FastifyInstance) {
-  const {prisma} = fastify;
+  const {prisma, redis} = fastify;
 
   fastify.post(
       '/sharex',
@@ -78,9 +78,16 @@ export default async function UploadRouter(fastify: FastifyInstance) {
 
         uploadFile(file, reqFile.buffer);
 
-        reply.send({
+        const data = {
           imageURL: `https://${file.domain}${file.path}${file.fileName}`,
+          cdnURL: `https://${s3Info.endpoint}/${process.env.S3_BUCKET}/${user.id}/${file.fileName}`,
+        };
+
+        redis.set(`recentupload-${user.id}`, JSON.stringify(data), {
+          EX: 60 * 60 * 24,
         });
+
+        reply.send(data);
       }
   );
 }

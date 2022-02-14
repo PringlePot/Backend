@@ -2,6 +2,7 @@ import 'dotenv/config';
 import {join} from 'path';
 import fastify from 'fastify';
 import {verify} from 'argon2';
+import {createClient} from 'redis';
 import fastifyCors from 'fastify-cors';
 import {Strategy} from 'passport-local';
 import fastifyHelmet from 'fastify-helmet';
@@ -16,6 +17,9 @@ const server = fastify({
   trustProxy: true,
 });
 server.prisma = new PrismaClient();
+server.redis = createClient({
+  url: process.env.REDIS_URL,
+});
 
 server.register(fastifyHelmet);
 
@@ -96,8 +100,9 @@ server.setValidatorCompiler(({schema}) => {
   return (data) => schema.validate ? schema.validate(data) : null;
 });
 
-server.listen(process.env.PORT, '0.0.0.0', (err) => {
+server.listen(process.env.PORT, '0.0.0.0', async (err) => {
   if (err) throw err;
 
+  await server.redis.connect();
   console.log(`Listening on http://127.0.0.1:${process.env.PORT}/`);
 });
