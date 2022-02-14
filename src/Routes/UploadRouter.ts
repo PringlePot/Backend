@@ -36,21 +36,27 @@ export default async function UploadRouter(fastify: FastifyInstance) {
         };
 
         const fileName =
-        generateRandomString(10) + '.' + reqFile.mimetype.split('/')[1];
-
+          generateRandomString(10) + '.' + reqFile.mimetype.split('/')[1];
+        const domain =
+          reqFile.mimetype.split('/')[0] === 'image' ?
+            'kythi.pics' :
+            'kythi.media';
         const fileData = {
           fileName,
           cdnName: fileName,
           mimeType: reqFile.mimetype,
           size: reqFile.size,
           path: '/',
-          domain:
-          reqFile.mimetype.split('/')[0] === 'image' ?
-            'kythi.pics' :
-            'kythi.media',
+          domain,
           uploadedAt: new Date(),
           uploaderId: user.id,
         };
+        const data = {
+          imageURL: `https://${domain}/${fileName}`,
+          cdnURL: `https://${s3Info.endpoint}/${process.env.S3_BUCKET}/${user.id}/${fileName}`,
+        };
+
+        await reply.send(data);
 
         const file = await prisma.file.create({
           data: {
@@ -76,18 +82,11 @@ export default async function UploadRouter(fastify: FastifyInstance) {
           data: {count: {increment: 1}},
         });
 
-        uploadFile(file, reqFile.buffer);
-
-        const data = {
-          imageURL: `https://${file.domain}${file.path}${file.fileName}`,
-          cdnURL: `https://${s3Info.endpoint}/${process.env.S3_BUCKET}/${user.id}/${file.fileName}`,
-        };
-
-        redis.set(`recentupload-${user.id}`, JSON.stringify(data), {
+        await redis.set(`recentupload-${user.id}`, JSON.stringify(data), {
           EX: 60 * 60 * 24,
         });
 
-        reply.send(data);
+        uploadFile(file, reqFile.buffer);
       }
   );
 }
